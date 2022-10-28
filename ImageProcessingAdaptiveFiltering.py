@@ -3,30 +3,57 @@ import cv2
 import math
 import matplotlib.pyplot as plt
 
+origin = cv2.imread('image.png')
 img = cv2.imread('image.png', 0)
 cv2.imwrite('image_grayscale.png', img)
-sz = img.shape[0] * img.shape[1]
 
-m = 0           # mean of Gaussian noise
-sd = 0.5      # standard deviation of Gaussian noise
+example_arr = np.array([
+    [0.9361, 1.000,  1.000,  0.8871],
+    [1.000,  1.000,  0.9184, 1.000],
+    [0.9868, 1.000,  1.000,  0.9591],
+    [0.000,  0.8987, 0.9400, 1.000]
+])
 
-i = 0
-while i < img.shape[0]:
-    j = 0
-    while j < img.shape[1]:
+# img.shape[0] = image height in pixels
+# img.shape[1] = image width in pixels
+# img.size = total number of pixels in image (= img.shape[0] * img.shape[1])
+
+m = 0  # mean of Gaussian noise
+sd = 0.25  # standard deviation of Gaussian noise
+
+# Create noise in the image
+for i in range(0, img.shape[0]):
+    for j in range(0, img.shape[1]):
         img[i][j] = img[i][j] + np.random.normal(m, sd)
-        j += 1
-    i += 1
 
-cv2.imwrite('image_noisey.png', img)
-
+# Save image with noise
+cv2.imwrite('image_noise.png', img)
 
 # Define the window size mxn
-M = 5
-N = 5
+M = 3
+N = 3
 
-# Pad the array with zeros on all sides
-C = np.pad(img, )
+C = np.pad(img, 1, mode='constant')
+local_mean = np.empty((img.shape[0], img.shape[1]))
+local_variance = np.empty((img.shape[0], img.shape[1]))
 
-print(img[0])
-print(C[0])
+def mean(arr):
+    s = 0
+    for index in range(0, len(arr)):
+        s += np.sum(arr[index])
+    return s / arr.size
+
+
+for i in range(0, img.shape[0]):
+    for j in range(0, img.shape[1]):
+        window = C[i:i+M, j:j+N]
+        local_mean[i][j] = mean(window)
+        local_variance[i][j] = mean(np.square(window)) - np.square(mean(window))
+
+noise_variance = (mean(local_variance)*local_variance.size)/img.size
+
+variance = max(noise_variance, mean(local_variance)*local_variance.size)
+
+img_new = img - (np.multiply(noise_variance/variance, np.subtract(img, local_mean)))
+
+cv2.imwrite('image_restored.png', img_new)
