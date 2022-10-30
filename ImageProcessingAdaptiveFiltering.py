@@ -19,7 +19,7 @@ example_arr = np.array([
 # img.size = total number of pixels in image (= img.shape[0] * img.shape[1])
 
 m = 0  # mean of Gaussian noise
-sd = 0.25  # standard deviation of Gaussian noise
+sd = 0.4  # standard deviation of Gaussian noise
 
 # Create noise in the image
 for i in range(0, img.shape[0]):
@@ -43,6 +43,12 @@ def mean(arr):
         s += np.sum(arr[index])
     return s / arr.size
 
+def arr_sum(arr):
+    s = 0
+    for index in range(0, len(arr)):
+        s += np.sum(arr[index])
+    return s
+
 
 for i in range(0, img.shape[0]):
     for j in range(0, img.shape[1]):
@@ -50,9 +56,9 @@ for i in range(0, img.shape[0]):
         local_mean[i][j] = mean(window)
         local_variance[i][j] = mean(np.square(window)) - np.square(mean(window))
 
-noise_variance = (mean(local_variance)*local_variance.size)/img.size
+noise_variance = arr_sum(local_variance)/img.size
 
-variance = max(noise_variance, mean(local_variance)*local_variance.size)
+variance = max(noise_variance, arr_sum(local_variance))
 
 img_new = img - (np.multiply(noise_variance/variance, np.subtract(img, local_mean)))
 
